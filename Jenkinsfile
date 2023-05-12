@@ -83,7 +83,7 @@ pipeline{
                             ], 
                             credentialsId: 'admin-nexus', 
                             groupId: 'com.example', 
-                            nexusUrl: '44.202.162.19:8081', 
+                            nexusUrl: '35.171.20.186:8081', 
                             nexusVersion: 'nexus2', 
                             protocol: 'http', 
                             repository: 'ait-release', 
