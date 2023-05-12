@@ -81,7 +81,7 @@ pipeline{
                                     type: 'jar'
                                 ]
                             ], 
-                            credentialsId: '5784e24e-c6dc-316f-b368-cea63e031af2', 
+                            credentialsId: 'admin-nexus', 
                             groupId: 'com.example', 
                             nexusUrl: '172.31.85.155:8081', 
                             nexusVersion: 'nexus2', 
