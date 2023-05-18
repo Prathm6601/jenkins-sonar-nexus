@@ -1,35 +1,35 @@
 pipeline{
-    
-    agent any 
-    
+
+    agent any
+
     stages {
-        
+
         stage('Git Checkout'){
-            
+
             steps{
-                
+
                 script{
-                    
+
                     git branch: 'main', url: 'https://github.com/Prathm6601/jenkins-sonar-nexus.git'
                 }
             }
         }
         stage('UNIT testing'){
-            
+
             steps{
-                
+
                 script{
-                    
+
                     sh 'mvn test'
                 }
             }
         }
         stage('Integration testing'){
-            
+
             steps{
-                
+
                 script{
-                    
+
                     sh 'mvn verify -DskipUnitTests'
                 }
             }
@@ -45,31 +45,49 @@ pipeline{
             }
         }
         stage('Static code analysis'){
-            
+
             steps{
-                
+
                 script{
-                    
+
                     withSonarQubeEnv(credentialsId: 'sonar-jenkins') {
-                        
+
                         sh 'mvn clean package sonar:sonar'
                     }
-                   }
-                    
                 }
             }
-      
-        stage('docker build andpush image to the nexus repo'){
+        }
+        stage('Quality Gate Status'){
             steps{
                 script{
-                    withCredentials([string(credentialsId: 'nexus-cred', variable: 'nexus-cred')]){
-                        sh 'docker image build -t 35.175.142.195:8083/$JOB_NAME:v1.$BUILD_ID .'
-                        sh 'docker login -u admin -p prathm 35.175.142.195:8083'
-                        sh 'docker image push 35.175.142.195:8083/$JOB_NAME:v1.$BUILD_ID'
-                        
-                    }
+                    waitForQualityGate abortPipeline: false, credentialsId: 'sonar-jenkins'
                 }
             }
+        }
+        stage('upload war file to nexus'){
+
+                steps{
+
+                    script{
+                        def readPomVersion = readMavenPom file: 'pom.xml'
+                        def nexusRepo = readPomVersion.version.endsWith("SNAPSHOT") ? "ait-snapshot" : "ait-release"
+                        nexusArtifactUploader artifacts:
+                            [
+                                [
+                                    artifactId: 'spring-boot-starter-parent',
+                                    classifier: '',
+                                    file: 'target/Uber.jar', type: 'jar'
+                                ]
+                            ],
+                            credentialsId: 'nexus-a',
+                            groupId: 'com.example',
+                            nexusUrl: '54.89.178.78:8081',
+                            nexusVersion: 'nexus3',
+                            protocol: 'http',
+                            repository: nexusRepo,
+                            version: "${readPomVersion.version}"
+                    }
+                }
         }
      }   
 }
